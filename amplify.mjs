@@ -51,13 +51,13 @@ const deployManifestConfig = {
 	computeResources: [
 		{
 			name: 'default',
-			runtime: 'nodejs18.x',
+			runtime: 'nodejs21.x',
 			entrypoint: 'build/index.js'
 		}
 	],
 	framework: {
 		name: 'sveltekit',
-		version: '1.20.4'
+		version: '2.0.0'
 	}
 };
 
