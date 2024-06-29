@@ -51,7 +51,7 @@ const deployManifestConfig = {
 	computeResources: [
 		{
 			name: 'default',
-			runtime: 'nodejs21.x',
+			runtime: 'nodejs20.x',
 			entrypoint: 'build/index.js'
 		}
 	],
