@@ -6,7 +6,9 @@ import {
 	confirmSignIn,
 	fetchAuthSession as amplifyFetchAuthSession
 } from 'aws-amplify/auth';
-import { fetchAuthSession } from '$lib/auth.js';
+import { createLibraryOptions, fetchAuthSession, getAmplifyConfig } from '$lib/auth.js';
+import { runWithAmplifyServerContext } from 'aws-amplify/adapter-core';
+import { Amplify } from 'aws-amplify';
 
 export type defaultActionReturnType = {
 	signInStep:
@@ -35,17 +37,19 @@ export const actions = {
 		logger.info({ username, password }, 'sign in data');
 
 		try {
-			const { nextStep } = await signIn({
-				username,
-				password,
-				options: {
-					authFlowType: 'USER_SRP_AUTH'
-				}
-			});
+			const { nextStep } = await runWithAmplifyServerContext(
+				Amplify.getConfig(),
+				createLibraryOptions(cookies),
+				async (contextSpec) =>
+					signIn({
+						username,
+						password,
+						options: { authFlowType: 'USER_SRP_AUTH' }
+					})
+			);
 			logger.info({ nextStep }, 'sign in next step');
 			logger.info('fetching session');
-			const amplifySession = await amplifyFetchAuthSession();
-			logger.info({ amplifySession }, 'amplify session');
+
 			const session = await fetchAuthSession(cookies);
 			const token = session.tokens?.idToken?.toString();
 			logger.info({ nextStep, token }, 'sign in success');
