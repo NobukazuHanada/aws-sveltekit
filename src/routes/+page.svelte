@@ -13,7 +13,7 @@
 	let password: string = '';
 
 	$: {
-		logger.info({ data, form }, 'sign in page data and from : d');
+		logger.info({ data, form }, 'sign in page data and from');
 	}
 </script>
 
