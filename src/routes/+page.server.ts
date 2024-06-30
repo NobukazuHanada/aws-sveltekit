@@ -1,6 +1,6 @@
 import { logger } from '$lib/logger.js';
 import { fail } from '@sveltejs/kit';
-import { signIn, fetchAuthSession } from 'aws-amplify/auth';
+import { signIn, fetchAuthSession, AuthError } from 'aws-amplify/auth';
 
 /** @type {import('./$types').Actions} */
 export const actions = {
@@ -36,15 +36,9 @@ export const actions = {
 			return { signInStep: nextStep.signInStep, token };
 		} catch (error) {
 			logger.error({ error }, 'sign in error');
-			if (
-				error &&
-				typeof error === 'object' &&
-				'code' in error &&
-				'name' in error &&
-				'message' in error
-			) {
-				const { code, name, message } = error;
-				return fail(400, { code, name, message });
+			if (error instanceof AuthError) {
+				const { name, message } = error;
+				return fail(400, { name, message });
 			} else {
 				throw error;
 			}
