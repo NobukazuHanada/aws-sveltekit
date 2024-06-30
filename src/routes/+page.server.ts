@@ -69,15 +69,15 @@ export const actions = {
 	}): Promise<defaultActionReturnType | defaultActionFailure> => {
 		logger.info('new password start');
 		const data = await request.formData();
-		const newPassowrd = data.get('newPassowrd') as string;
+		const newPassword = data.get('newPassword') as string;
 		const token = data.get('token') as string;
-		logger.info({ newPassowrd, token }, 'new password form data');
+		logger.info({ newPassword, token }, 'new password form data');
 
 		const session = await fetchAuthSession(cookies);
-		logger.info({ session }, 'new password session');
+		logger.info({ token: session.tokens?.idToken?.toString() }, 'new password session');
 
 		try {
-			const confirmSignInOutput = await confirmSignIn({ challengeResponse: newPassowrd });
+			const confirmSignInOutput = await confirmSignIn({ challengeResponse: newPassword });
 			logger.info({ confirmSignInOutput }, 'new password success');
 			const nextStep = confirmSignInOutput.nextStep;
 			if (nextStep.signInStep === 'CONTINUE_SIGN_IN_WITH_TOTP_SETUP') {
