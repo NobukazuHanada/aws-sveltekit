@@ -34,7 +34,7 @@ export const actions = {
 			return { signInStep: nextStep.signInStep, token };
 		} catch (e) {
 			logger.error(e, 'signin error occurred');
-			fail(400, { e });
+			return fail(400, { e });
 		}
 	}
 };
