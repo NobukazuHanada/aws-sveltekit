@@ -22,10 +22,7 @@ export type defaultActionFailure = ActionFailure<{ name: string; message: string
 
 /** @type {import('./$types').Actions} */
 export const actions = {
-	default: async ({
-		cookies,
-		request
-	}): Promise<defaultActionReturnType | defaultActionFailure> => {
+	login: async ({ cookies, request }): Promise<defaultActionReturnType | defaultActionFailure> => {
 		logger.info('start signin');
 		const data = await request.formData();
 		const username = data.get('username') as string;
@@ -66,7 +63,10 @@ export const actions = {
 		}
 	},
 
-	'new-password': async ({ cookies, request }) => {
+	'new-password': async ({
+		cookies,
+		request
+	}): Promise<defaultActionReturnType | defaultActionFailure> => {
 		logger.info('new password start');
 		const data = await request.formData();
 		const newPassowrd = data.get('newPassowrd') as string;

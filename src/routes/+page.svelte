@@ -18,7 +18,7 @@
 </script>
 
 {#if form == null}
-	<form method="POST">
+	<form method="POST" action="?/login">
 		<label
 			>Username
 			<input name="username" type="text" bind:value={username} />
