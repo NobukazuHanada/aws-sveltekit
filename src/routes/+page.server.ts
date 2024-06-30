@@ -1,10 +1,31 @@
 import { logger } from '$lib/logger.js';
-import { fail } from '@sveltejs/kit';
-import { signIn, fetchAuthSession, AuthError } from 'aws-amplify/auth';
+import { fail, type ActionFailure } from '@sveltejs/kit';
+import { signIn, AuthError, confirmSignIn } from 'aws-amplify/auth';
+import { fetchAuthSession } from '$lib/auth.js';
+
+export type defaultActionReturnType = {
+	signInStep:
+		| 'CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE'
+		| 'CONTINUE_SIGN_IN_WITH_MFA_SELECTION'
+		| 'CONFIRM_SIGN_IN_WITH_SMS_CODE'
+		| 'CONFIRM_SIGN_IN_WITH_TOTP_CODE'
+		| 'CONTINUE_SIGN_IN_WITH_TOTP_SETUP'
+		| 'CONFIRM_SIGN_UP'
+		| 'RESET_PASSWORD'
+		| 'DONE'
+		| 'CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED';
+	token?: string;
+	secretCode?: string;
+};
+
+export type defaultActionFailure = ActionFailure<{ name: string; message: string }>;
 
 /** @type {import('./$types').Actions} */
 export const actions = {
-	default: async ({ cookies, request }) => {
+	default: async ({
+		cookies,
+		request
+	}): Promise<defaultActionReturnType | defaultActionFailure> => {
 		logger.info('start signin');
 		const data = await request.formData();
 		const username = data.get('username') as string;
@@ -21,7 +42,7 @@ export const actions = {
 			});
 			logger.info({ nextStep }, 'sign in next step');
 			logger.info('fetching session');
-			const session = await fetchAuthSession();
+			const session = await fetchAuthSession(cookies);
 			const token = session.tokens?.idToken?.toString();
 			if (token) {
 				cookies.set('token', token, { path: '/' });
@@ -36,6 +57,43 @@ export const actions = {
 			return { signInStep: nextStep.signInStep, token };
 		} catch (error) {
 			logger.error({ error }, 'sign in error');
+			if (error instanceof AuthError) {
+				const { name, message } = error;
+				return fail(400, { name, message });
+			} else {
+				throw error;
+			}
+		}
+	},
+
+	'new-password': async ({ cookies, request }) => {
+		logger.info('new password start');
+		const data = await request.formData();
+		const newPassowrd = data.get('newPassowrd') as string;
+		const token = data.get('token') as string;
+		logger.info({ newPassowrd, token }, 'new password form data');
+
+		const session = await fetchAuthSession(cookies);
+		logger.info({ session }, 'new password session');
+
+		try {
+			const confirmSignInOutput = await confirmSignIn({ challengeResponse: newPassowrd });
+			logger.info({ confirmSignInOutput }, 'new password success');
+			const nextStep = confirmSignInOutput.nextStep;
+			if (nextStep.signInStep === 'CONTINUE_SIGN_IN_WITH_TOTP_SETUP') {
+				const secretCode = nextStep.totpSetupDetails.sharedSecret;
+				return {
+					signInStep: nextStep.signInStep,
+					token: session.tokens?.idToken?.toString(),
+					secretCode
+				};
+			}
+			return {
+				signInStep: nextStep.signInStep,
+				token: session.tokens?.idToken?.toString()
+			};
+		} catch (error) {
+			logger.error({ error }, 'new password error');
 			if (error instanceof AuthError) {
 				const { name, message } = error;
 				return fail(400, { name, message });
