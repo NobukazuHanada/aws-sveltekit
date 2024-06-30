@@ -19,6 +19,8 @@ export const actions = {
 					authFlowType: 'USER_SRP_AUTH'
 				}
 			});
+			logger.info({ nextStep }, 'sign in next step');
+			logger.info('fetching session');
 			const session = await fetchAuthSession();
 			const token = session.tokens?.idToken?.toString();
 			if (token) {
