@@ -1,6 +1,11 @@
 import { logger } from '$lib/logger.js';
 import { fail, type ActionFailure } from '@sveltejs/kit';
-import { signIn, AuthError, confirmSignIn } from 'aws-amplify/auth';
+import {
+	signIn,
+	AuthError,
+	confirmSignIn,
+	fetchAuthSession as amplifyFetchAuthSession
+} from 'aws-amplify/auth';
 import { fetchAuthSession } from '$lib/auth.js';
 
 export type defaultActionReturnType = {
@@ -39,6 +44,8 @@ export const actions = {
 			});
 			logger.info({ nextStep }, 'sign in next step');
 			logger.info('fetching session');
+			const amplifySession = await amplifyFetchAuthSession();
+			logger.info({ amplifySession }, 'amplify session');
 			const session = await fetchAuthSession(cookies);
 			const token = session.tokens?.idToken?.toString();
 			logger.info({ nextStep, token }, 'sign in success');
