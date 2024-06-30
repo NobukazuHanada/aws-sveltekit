@@ -19,11 +19,11 @@
 	<form method="POST">
 		<label
 			>Username
-			<input type="text" bind:value={username} />
+			<input name="username" type="text" bind:value={username} />
 		</label>
 		<label
 			>Password
-			<input type="password" bind:value={password} />
+			<input type="password" name="password" bind:value={password} />
 		</label>
 		<input type="submit" value="signin" />
 	</form>
