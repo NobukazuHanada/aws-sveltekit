@@ -9,6 +9,7 @@ import {
 } from 'aws-amplify/adapter-core';
 import type { LibraryOptions, FetchAuthSessionOptions } from '@aws-amplify/core';
 import { fetchAuthSession as serverFetchAuthSession } from 'aws-amplify/auth/server';
+import { logger } from './logger';
 
 export const getAmplifyConfig = () => Amplify.getConfig().Auth!;
 
@@ -16,15 +17,19 @@ export function createKeyValueStorage(cookies: Cookies) {
 	return createKeyValueStorageFromCookieStorageAdapter({
 		get(name) {
 			const value = cookies.get(name);
+			logger.info({ name, value }, 'get cookie');
 			return { name, value };
 		},
 		getAll() {
+			logger.info(cookies.getAll(), 'get all cookies');
 			return cookies.getAll();
 		},
 		set(name, value) {
+			logger.info({ name, value }, 'set cookie');
 			cookies.set(name, value, { path: '/' });
 		},
 		delete(name) {
+			logger.info({ name }, 'delete cookie');
 			cookies.delete(name, { path: '/' });
 		}
 	});
