@@ -32,9 +32,9 @@ export const actions = {
 			}
 
 			return { signInStep: nextStep.signInStep, token };
-		} catch (e) {
-			logger.error(e, 'signin error occurred');
-			return fail(400, { e });
+		} catch (error) {
+			logger.error(error);
+			return fail(400, { error });
 		}
 	}
 };
