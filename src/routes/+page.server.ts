@@ -41,10 +41,8 @@ export const actions = {
 			logger.info('fetching session');
 			const session = await fetchAuthSession(cookies);
 			const token = session.tokens?.idToken?.toString();
-			if (token) {
-				cookies.set('token', token, { path: '/' });
-			}
-			logger.info({ nextStep, session }, 'sign in success');
+			logger.info({ nextStep, token }, 'sign in success');
+			logger.info(cookies.getAll(), 'cookies');
 
 			if (nextStep.signInStep === 'CONTINUE_SIGN_IN_WITH_TOTP_SETUP') {
 				const secretCode = nextStep.totpSetupDetails.sharedSecret;
