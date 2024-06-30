@@ -35,8 +35,19 @@ export const actions = {
 
 			return { signInStep: nextStep.signInStep, token };
 		} catch (error) {
-			logger.error(error);
-			return fail(400, { error });
+			logger.error({ error }, 'sign in error');
+			if (
+				error &&
+				typeof error === 'object' &&
+				'code' in error &&
+				'name' in error &&
+				'message' in error
+			) {
+				const { code, name, message } = error;
+				return fail(400, { code, name, message });
+			} else {
+				throw error;
+			}
 		}
 	}
 };
