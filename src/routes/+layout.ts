@@ -1,6 +1,7 @@
 import { Amplify, type ResourcesConfig } from 'aws-amplify';
 import { env } from '$env/dynamic/public';
 
+logger.info('configure at +layout.ts');
 Amplify.configure({
 	Auth: {
 		Cognito: {
