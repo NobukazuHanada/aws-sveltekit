@@ -18,6 +18,7 @@ export async function load(loadParams) {
 	const { Auth } = withSSRContext({ req: loadParams.request });
 	const session = await Auth.currentSession();
 	logger.info({ session }, 'layout load session at page load');
+	return { ok: true };
 }
 
 /** @type {import('./$types').Actions} */
