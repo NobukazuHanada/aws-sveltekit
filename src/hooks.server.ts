@@ -16,17 +16,19 @@ const getCookiePayload = (cookie: string) => {
 	return parsedPayload;
 };
 
-Amplify.configure(
-	{
-		Auth: {
-			Cognito: {
-				userPoolClientId: env.PUBLIC_AUTH_USER_CLIENDT_ID!,
-				userPoolId: env.PUBLIC_AUTH_USER_POOL_ID!
+if (!Amplify.getConfig().Auth) {
+	Amplify.configure(
+		{
+			Auth: {
+				Cognito: {
+					userPoolClientId: env.PUBLIC_AUTH_USER_CLIENDT_ID!,
+					userPoolId: env.PUBLIC_AUTH_USER_POOL_ID!
+				}
 			}
-		}
-	},
-	{ ssr: true }
-);
+		},
+		{ ssr: true }
+	);
+}
 
 /** @type {import('@sveltejs/kit').Handle} */
 export async function handle({ event, resolve }): Promise<Response> {
