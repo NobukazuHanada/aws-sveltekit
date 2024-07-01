@@ -37,8 +37,7 @@ export async function handle({ event, resolve }): Promise<Response> {
 		(cookie) => cookie.name.startsWith('CognitoIdentityServiceProvider') && cookie.value !== null
 	);
 
-
-    logger.info({allCookies, cognitoCookies},'cookie handler');
+	logger.info({ allCookies, cognitoCookies }, 'cookie handler');
 
 	if (cognitoCookies?.length === 0) {
 		locals.jwtAccessToken = null;
@@ -73,4 +72,4 @@ export async function handle({ event, resolve }): Promise<Response> {
 
 	logger.info({ locals }, '✅ signed-in email:');
 	return resolve(event);
-}) satisfies Handle;
+}
