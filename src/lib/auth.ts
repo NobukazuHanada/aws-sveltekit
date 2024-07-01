@@ -27,7 +27,7 @@ export const isValidCognitoToken = async (input: {
 		const verifier = CognitoJwtVerifier.create({
 			userPoolId,
 			tokenUse: tokenType,
-			clientId,
+			clientId
 		});
 		await verifier.verify(token);
 
@@ -47,42 +47,45 @@ export const isValidCognitoToken = async (input: {
 };
 
 export function createKeyValueStorage(cookies: Cookies) {
-	return createKeyValueStorageFromCookieStorageAdapter({
-		get(name) {
-			const value = cookies.get(name);
-			logger.info({ name, value }, 'get cookie');
-			return { name, value };
+	return createKeyValueStorageFromCookieStorageAdapter(
+		{
+			get(name) {
+				const value = cookies.get(name);
+				logger.info({ name, value }, 'get cookie');
+				return { name, value };
+			},
+			getAll() {
+				logger.info(cookies.getAll(), 'get all cookies');
+				return cookies.getAll();
+			},
+			set(name, value) {
+				logger.info({ name, value }, 'set cookie');
+				cookies.set(name, value, { path: '/' });
+			},
+			delete(name) {
+				logger.info({ name }, 'delete cookie');
+				cookies.delete(name, { path: '/' });
+			}
 		},
-		getAll() {
-			logger.info(cookies.getAll(), 'get all cookies');
-			return cookies.getAll();
-		},
-		set(name, value) {
-			logger.info({ name, value }, 'set cookie');
-			cookies.set(name, value, { path: '/' });
-		},
-		delete(name) {
-			logger.info({ name }, 'delete cookie');
-			cookies.delete(name, { path: '/' });
+		{
+			// validate access, id tokens
+			getItem: async (key: string, value: string): Promise<boolean> => {
+				const tokenType = key.includes('.accessToken')
+					? 'access'
+					: key.includes('.idToken')
+						? 'id'
+						: null;
+				if (!tokenType) return true;
+
+				return isValidCognitoToken({
+					clientId: env.PUBLIC_AUTH_USER_CLIENDT_ID!,
+					userPoolId: env.PUBLIC_AUTH_USER_POOL_ID!,
+					tokenType,
+					token: value
+				});
+			}
 		}
-	}, {
-		// validate access, id tokens
-		getItem: async (key: string, value: string): Promise<boolean> => {
-			const tokenType = key.includes('.accessToken')
-				? 'access'
-				: key.includes('.idToken')
-					? 'id'
-					: null;
-			if (!tokenType) return true;
-
-
-			return isValidCognitoToken({
-                clientId: env.PUBLIC_AUTH_USER_CLIENDT_ID!,
-				userPoolId: env.PUBLIC_AUTH_USER_POOL_ID!,
-				tokenType,
-				token: value,
-			});
-		});
+	);
 }
 
 export function createTokenProvider(cookies: Cookies) {
