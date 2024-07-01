@@ -36,11 +36,11 @@
 				signIn({ username, password, options: { authFlowType: 'USER_SRP_AUTH' } })
 					.then((result) => {
 						logger.info({ result }, 'sign in result');
+						invalidateAll();
 					})
 					.catch((error) => {
 						logger.error({ error }, 'sign in error');
 					});
-				invalidateAll();
 			}}
 		/>
 	</form>
