@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { Amplify } from 'aws-amplify';
 	import { env } from '$env/dynamic/public';
+	import { logger } from '$lib/logger';
 
+	logger.info('layout page loaded with amplify configuration');
 	Amplify.configure({
 		Auth: {
 			userPoolWebClientId: env.PUBLIC_AUTH_USER_CLIENDT_ID!,
