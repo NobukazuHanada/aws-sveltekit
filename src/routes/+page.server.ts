@@ -1,21 +1,11 @@
 import { logger } from '$lib/logger.js';
 import { fail, type ActionFailure } from '@sveltejs/kit';
-import { signIn, AuthError, confirmSignIn } from 'aws-amplify/auth';
-import { createLibraryOptions, fetchAuthSession } from '$lib/auth.js';
-import { runWithAmplifyServerContext } from 'aws-amplify/adapter-core';
-import { Amplify } from 'aws-amplify';
+import { withSSRContext } from 'aws-amplify';
+import type { CognitoUser, CognitoUserSession } from 'amazon-cognito-identity-js';
+import { Auth as AmplifyAuth } from 'aws-amplify';
 
 export type defaultActionReturnType = {
-	signInStep:
-		| 'CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE'
-		| 'CONTINUE_SIGN_IN_WITH_MFA_SELECTION'
-		| 'CONFIRM_SIGN_IN_WITH_SMS_CODE'
-		| 'CONFIRM_SIGN_IN_WITH_TOTP_CODE'
-		| 'CONTINUE_SIGN_IN_WITH_TOTP_SETUP'
-		| 'CONFIRM_SIGN_UP'
-		| 'RESET_PASSWORD'
-		| 'DONE'
-		| 'CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED';
+	challengeName: CognitoUser['challengeName'];
 	token?: string;
 	secretCode?: string;
 };
@@ -25,8 +15,9 @@ export type defaultActionFailure = ActionFailure<{ name: string; message: string
 /** @type {import('./$types').PageLoad} */
 export async function load(loadParams) {
 	logger.info(loadParams, 'layout load');
-	const result = await fetchAuthSession(loadParams.cookies);
-	logger.info(result, 'layout load');
+	const { Auth } = withSSRContext({ req: loadParams.request });
+	const session = await Auth.currentSession();
+	logger.info({ session }, 'layout load session');
 }
 
 /** @type {import('./$types').Actions} */
@@ -39,35 +30,35 @@ export const actions = {
 		logger.info({ username, password }, 'sign in data');
 
 		try {
-			const { nextStep } = await runWithAmplifyServerContext(
-				Amplify.getConfig(),
-				createLibraryOptions(cookies),
-				async (contextSpec) =>
-					await signIn({ username, password, options: { authFlowType: 'USER_SRP_AUTH' } })
-			);
-			logger.info(cookies.getAll(), 'cookies');
-			logger.info({ nextStep }, 'sign in next step');
+			const context = withSSRContext({ req: request });
+			const Auth = context.Auth as typeof AmplifyAuth;
+
+			const cognitoUser: CognitoUser = await Auth.signIn(username, password);
 			logger.info('fetching session');
+			const sessionPromise = new Promise<CognitoUserSession>((resolve, reject) => {
+				cognitoUser.getSession((err: any, session: CognitoUserSession) => {
+					if (err) {
+						reject(err);
+					} else {
+						resolve(session);
+					}
+				});
+			});
+			const session = await sessionPromise;
+			logger.info({ session }, 'sign in session');
+			const token = session.getIdToken().getJwtToken();
+			logger.info({ token }, 'sign in token');
 
-			const session = await fetchAuthSession(cookies, { forceRefresh: true });
-			const token = session.tokens?.idToken?.toString();
-			logger.info({ nextStep, token }, 'sign in success');
-			logger.info(cookies.getAll(), 'cookies');
-
-			if (nextStep.signInStep === 'CONTINUE_SIGN_IN_WITH_TOTP_SETUP') {
-				const secretCode = nextStep.totpSetupDetails.sharedSecret;
-				return { signInStep: nextStep.signInStep, token, secretCode };
+			if (cognitoUser.challengeName === 'MFA_SETUP') {
+				const secretCode = await Auth.setupTOTP(cognitoUser);
+				return { token, secretCode, challengeName: cognitoUser.challengeName };
 			}
 
-			return { signInStep: nextStep.signInStep, token };
+			return { token, challengeName: cognitoUser.challengeName };
 		} catch (error) {
 			logger.error({ error }, 'sign in error');
-			if (error instanceof AuthError) {
-				const { name, message } = error;
-				return fail(400, { name, message });
-			} else {
-				throw error;
-			}
+			const { name, message, code } = error as { name: string; message: string; code: string };
+			return fail(400, { name, message, code });
 		}
 	},
 
@@ -81,33 +72,26 @@ export const actions = {
 		const token = data.get('token') as string;
 		logger.info({ newPassword, token }, 'new password form data');
 
-		const session = await fetchAuthSession(cookies);
-		logger.info({ token: session.tokens?.idToken?.toString() }, 'new password session');
-
 		try {
-			const confirmSignInOutput = await confirmSignIn({ challengeResponse: newPassword });
-			logger.info({ confirmSignInOutput }, 'new password success');
-			const nextStep = confirmSignInOutput.nextStep;
-			if (nextStep.signInStep === 'CONTINUE_SIGN_IN_WITH_TOTP_SETUP') {
-				const secretCode = nextStep.totpSetupDetails.sharedSecret;
-				return {
-					signInStep: nextStep.signInStep,
-					token: session.tokens?.idToken?.toString(),
-					secretCode
-				};
+			const context = withSSRContext({ req: request });
+			const Auth = context.Auth as typeof AmplifyAuth;
+			const currentUser: CognitoUser = await Auth.currentAuthenticatedUser();
+			if (!currentUser) {
+				throw new Error('No current user');
 			}
-			return {
-				signInStep: nextStep.signInStep,
-				token: session.tokens?.idToken?.toString()
-			};
+			logger.info({ currentUser }, 'new password current user');
+			const user: CognitoUser = await Auth.completeNewPassword(currentUser, newPassword);
+
+			if (user.challengeName === 'MFA_SETUP') {
+				const secretCode = await Auth.setupTOTP(user);
+				return { token, secretCode, challengeName: user.challengeName };
+			}
+
+			return { token, challengeName: user.challengeName };
 		} catch (error) {
 			logger.error({ error }, 'new password error');
-			if (error instanceof AuthError) {
-				const { name, message } = error;
-				return fail(400, { name, message });
-			} else {
-				throw error;
-			}
+			const { name, message, code } = error as { name: string; message: string; code: string };
+			return fail(400, { name, message, code });
 		}
 	}
 };

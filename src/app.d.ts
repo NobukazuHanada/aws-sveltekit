@@ -3,17 +3,7 @@
 declare global {
 	namespace App {
 		// interface Error {}
-		interface Locals {
-			jwtAccessToken: string | null;
-			jwtIdToken: string | null;
-			idTokenPayload: string | null;
-			accessTokenPayload: string | null;
-
-			userId: string | null;
-			username: string | null;
-			email: string | null;
-			userGroups: string | null;
-		}
+		interface Locals {}
 		// interface PageData {}
 		// interface PageState {}
 		// interface Platform {}
