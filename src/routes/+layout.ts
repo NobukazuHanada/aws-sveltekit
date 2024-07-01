@@ -1,6 +1,7 @@
 import { Amplify, type ResourcesConfig } from 'aws-amplify';
 import { env } from '$env/dynamic/public';
 import { logger } from '$lib/logger';
+import { browser } from '$app/environment';
 
 if (!Amplify.getConfig().Auth) {
 	Amplify.configure(
@@ -12,7 +13,7 @@ if (!Amplify.getConfig().Auth) {
 				}
 			}
 		},
-		{ ssr: true }
+		{ ssr: !browser }
 	);
 }
 
