@@ -15,9 +15,9 @@ export type defaultActionFailure = ActionFailure<{ name: string; message: string
 /** @type {import('./$types').PageLoad} */
 export async function load(loadParams) {
 	logger.info('layout load at page load');
-	const { Auth } = withSSRContext({ req: loadParams.request });
-	const session = await Auth.currentSession();
-	logger.info({ session }, 'layout load session at page load');
+	//const { Auth } = withSSRContext({ req: loadParams.request });
+	//const session = await Auth.currentSession();
+	//logger.info({ session }, 'layout load session at page load');
 	return { ok: true };
 }
 
