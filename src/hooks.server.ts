@@ -28,13 +28,17 @@ Amplify.configure(
 	{ ssr: true }
 );
 
-export const handleUser = (async ({ event, resolve }): Promise<Response> => {
+/** @type {import('@sveltejs/kit').Handle} */
+export async function handle({ event, resolve }): Promise<Response> {
 	const { cookies, locals } = event;
 
 	const allCookies = cookies.getAll();
 	const cognitoCookies = allCookies.filter(
 		(cookie) => cookie.name.startsWith('CognitoIdentityServiceProvider') && cookie.value !== null
 	);
+
+
+    logger.info({allCookies, cognitoCookies},'cookie handler');
 
 	if (cognitoCookies?.length === 0) {
 		locals.jwtAccessToken = null;
