@@ -2,7 +2,7 @@
 	import { logger } from '$lib/logger';
 	import type { ActionFailure } from '@sveltejs/kit';
 	import type { defaultActionReturnType } from './+page.server';
-	import { signIn } from 'aws-amplify/auth';
+	import { fetchAuthSession, signIn } from 'aws-amplify/auth';
 	import { invalidateAll } from '$app/navigation';
 	import { onMount } from 'svelte';
 
@@ -18,6 +18,12 @@
 	$: {
 		logger.info({ data, form }, 'sign in page data and from');
 	}
+
+	onMount(async () => {
+		logger.info('sign in page mounted');
+		const result = await fetchAuthSession();
+		logger.info({ result }, 'fetch auth session result');
+	});
 </script>
 
 {#if form == null}
