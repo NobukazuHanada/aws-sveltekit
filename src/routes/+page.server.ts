@@ -43,7 +43,7 @@ export const actions = {
 			logger.info({ nextStep }, 'sign in next step');
 			logger.info('fetching session');
 
-			const session = await fetchAuthSession();
+			const session = await fetchAuthSession(cookies);
 			const token = session.tokens?.idToken?.toString();
 			logger.info({ nextStep, token }, 'sign in success');
 			logger.info(cookies.getAll(), 'cookies');
