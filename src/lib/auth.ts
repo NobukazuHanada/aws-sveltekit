@@ -60,7 +60,9 @@ export function createKeyValueStorage(cookies: Cookies) {
 			},
 			set(name, value) {
 				logger.info({ name, value }, 'set cookie');
-				cookies.set(name, value, { path: '/' });
+				const expires = new Date();
+				expires.setDate(expires.getDate() + 30);
+				cookies.set(name, value, { path: '/', sameSite: 'lax', secure: true, expires });
 			},
 			delete(name) {
 				logger.info({ name }, 'delete cookie');
