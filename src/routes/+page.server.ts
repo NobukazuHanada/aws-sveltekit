@@ -2,7 +2,7 @@ import { logger } from '$lib/logger.js';
 import { fail, type ActionFailure } from '@sveltejs/kit';
 import { withSSRContext } from 'aws-amplify';
 import type { CognitoUser, CognitoUserSession } from 'amazon-cognito-identity-js';
-import { Auth as AmplifyAuth } from 'aws-amplify';
+import type { AuthClass } from 'aws-amplify/lib/Auth';
 
 export type defaultActionReturnType = {
 	challengeName: CognitoUser['challengeName'];
@@ -31,7 +31,7 @@ export const actions = {
 
 		try {
 			const context = withSSRContext({ req: request });
-			const Auth = context.Auth as typeof AmplifyAuth;
+			const Auth = context.Auth as AuthClass;
 
 			const cognitoUser: CognitoUser = await Auth.signIn(username, password);
 			logger.info('fetching session');
@@ -74,7 +74,7 @@ export const actions = {
 
 		try {
 			const context = withSSRContext({ req: request });
-			const Auth = context.Auth as typeof AmplifyAuth;
+			const Auth = context.Auth as AuthClass;
 			const currentUser: CognitoUser = await Auth.currentAuthenticatedUser();
 			if (!currentUser) {
 				throw new Error('No current user');
