@@ -52,7 +52,11 @@ export function createKeyValueStorage(cookies: Cookies) {
 			get(name) {
 				const value = cookies.get(name);
 				logger.info({ name, value }, 'get cookie');
-				return { name, value };
+				if (value) {
+					return { name, value };
+				} else {
+					return undefined;
+				}
 			},
 			getAll() {
 				logger.info(cookies.getAll(), 'get all cookies');

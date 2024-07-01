@@ -2,9 +2,6 @@
 	import { logger } from '$lib/logger';
 	import type { ActionFailure } from '@sveltejs/kit';
 	import type { defaultActionReturnType } from './+page.server';
-	import { fetchAuthSession, signIn } from 'aws-amplify/auth';
-	import { invalidateAll } from '$app/navigation';
-	import { onMount } from 'svelte';
 
 	/** @type {import('./$types').PageData} */
 	export let data;
@@ -18,12 +15,6 @@
 	$: {
 		logger.info({ data, form }, 'sign in page data and from');
 	}
-
-	onMount(async () => {
-		logger.info('sign in page mounted');
-		const result = await fetchAuthSession();
-		logger.info({ result }, 'fetch auth session result');
-	});
 </script>
 
 {#if form == null}
@@ -36,24 +27,7 @@
 			>Password
 			<input type="password" name="password" bind:value={password} />
 		</label>
-		<input
-			type="submit"
-			value="signin"
-			on:click={() => {
-				signIn({ username, password, options: { authFlowType: 'USER_SRP_AUTH' } })
-					.then((result) => {
-						logger.info({ result }, 'sign in result');
-						return fetchAuthSession();
-					})
-					.then((result) => {
-						logger.info({ result }, 'fetch auth session result after sign in');
-						invalidateAll();
-					})
-					.catch((error) => {
-						logger.error({ error }, 'sign in error');
-					});
-			}}
-		/>
+		<input type="submit" value="signin" />
 	</form>
 {:else if 'signInStep' in form}
 	{#if form.signInStep === 'CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED'}
