@@ -29,8 +29,8 @@
 		</label>
 		<input type="submit" value="signin" />
 	</form>
-{:else if 'signInStep' in form}
-	{#if form.signInStep === 'CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED'}
+{:else if 'challengeName' in form}
+	{#if form.challengeName === 'NEW_PASSWORD_REQUIRED'}
 		<form method="POST" action="?/new-password">
 			<label
 				>New Password
