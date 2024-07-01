@@ -21,8 +21,10 @@ export type defaultActionReturnType = {
 export type defaultActionFailure = ActionFailure<{ name: string; message: string }>;
 
 /** @type {import('./$types').PageLoad} */
-export function load(loadParams) {
+export async function load(loadParams) {
 	logger.info(loadParams, 'layout load');
+	const result = await fetchAuthSession(loadParams.cookies);
+	logger.info(result, 'layout load');
 }
 
 /** @type {import('./$types').Actions} */
