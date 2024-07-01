@@ -43,6 +43,10 @@
 				signIn({ username, password, options: { authFlowType: 'USER_SRP_AUTH' } })
 					.then((result) => {
 						logger.info({ result }, 'sign in result');
+						return fetchAuthSession();
+					})
+					.then((result) => {
+						logger.info({ result }, 'fetch auth session result after sign in');
 						invalidateAll();
 					})
 					.catch((error) => {
