@@ -12,6 +12,4 @@ Amplify.configure({
 });
 
 /** @type {import('./$types').PageLoad} */
-export function load(loadParams) {
-	logger.info(loadParams, 'layout load');
-}
+export function load(loadParams) {}
