@@ -1,14 +1,8 @@
 import { logger } from '$lib/logger.js';
 import { fail, type ActionFailure } from '@sveltejs/kit';
-import {
-	signIn,
-	AuthError,
-	confirmSignIn,
-	fetchAuthSession as amplifyFetchAuthSession
-} from 'aws-amplify/auth';
-import { createLibraryOptions, fetchAuthSession, getAmplifyConfig } from '$lib/auth.js';
-import { runWithAmplifyServerContext } from 'aws-amplify/adapter-core';
-import { Amplify } from 'aws-amplify';
+import { signIn, AuthError, confirmSignIn } from 'aws-amplify/auth';
+import { fetchAuthSession } from 'aws-amplify/auth/server';
+//import { fetchAuthSession } from '$lib/auth.js';
 
 export type defaultActionReturnType = {
 	signInStep:
@@ -42,16 +36,11 @@ export const actions = {
 		logger.info({ username, password }, 'sign in data');
 
 		try {
-			const { nextStep } = await runWithAmplifyServerContext(
-				Amplify.getConfig(),
-				createLibraryOptions(cookies),
-				async (contextSpec) =>
-					signIn({
-						username,
-						password,
-						options: { authFlowType: 'USER_SRP_AUTH' }
-					})
-			);
+			const { nextStep } = await signIn({
+				username,
+				password,
+				options: { authFlowType: 'USER_SRP_AUTH' }
+			});
 			logger.info({ nextStep }, 'sign in next step');
 			logger.info('fetching session');
 
