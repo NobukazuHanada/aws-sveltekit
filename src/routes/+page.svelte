@@ -3,6 +3,7 @@
 	import type { ActionFailure } from '@sveltejs/kit';
 	import type { defaultActionReturnType } from './+page.server';
 	import { signIn } from 'aws-amplify/auth';
+	import { invalidateAll } from '$app/navigation';
 
 	/** @type {import('./$types').PageData} */
 	export let data;
@@ -39,6 +40,7 @@
 					.catch((error) => {
 						logger.error({ error }, 'sign in error');
 					});
+				invalidateAll();
 			}}
 		/>
 	</form>
