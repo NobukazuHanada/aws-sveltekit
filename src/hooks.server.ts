@@ -2,14 +2,13 @@ import { env } from '$env/dynamic/public';
 import { logger } from '$lib/logger';
 import type { Handle } from '@sveltejs/kit';
 import { Amplify } from 'aws-amplify';
-// import { getCookiePayload, getSpecificCookie } from '$lib/utils/cookie-helpers';
 
 type Cookie = { name: string; value: string } | null;
 
-const getSpecificCookie = (cookies: any, name: string) =>
+const getSpecificCookie = (cookies: Cookie[], name: string) =>
 	cookies
-		.map((cookie: Cookie) => (cookie?.name?.endsWith(name) ? cookie?.value : null))
-		.filter((value: string) => value !== null)[0];
+		.map((cookie) => (cookie?.name?.endsWith(name) ? cookie?.value : null))
+		.filter((value) => value !== null)[0];
 
 const getCookiePayload = (cookie: string) => {
 	const payload = cookie?.split('.')[1];
