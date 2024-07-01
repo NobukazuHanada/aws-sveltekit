@@ -1,5 +1,6 @@
 import { Amplify, type ResourcesConfig } from 'aws-amplify';
 import { env } from '$env/dynamic/public';
+import { logger } from '$lib/logger';
 
 Amplify.configure(
 	{
@@ -12,3 +13,8 @@ Amplify.configure(
 	},
 	{ ssr: true }
 );
+
+/** @type {import('./$types').PageLoad} */
+export function load(loadParams) {
+	logger.info(loadParams, 'layout load');
+}
