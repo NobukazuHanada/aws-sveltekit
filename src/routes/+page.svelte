@@ -2,8 +2,9 @@
 	import { logger } from '$lib/logger';
 	import type { ActionFailure } from '@sveltejs/kit';
 	import type { defaultActionReturnType } from './+page.server';
-	import { signIn } from 'aws-amplify/auth';
+	import { fetchAuthSession, signIn } from 'aws-amplify/auth';
 	import { invalidateAll } from '$app/navigation';
+	import { onMount } from 'svelte';
 
 	/** @type {import('./$types').PageData} */
 	export let data;
@@ -17,6 +18,9 @@
 	$: {
 		logger.info({ data, form }, 'sign in page data and from');
 	}
+	onMount(async () => {
+		await fetchAuthSession(); // will refresh tokens!!! 🎉
+	});
 </script>
 
 {#if form == null}
