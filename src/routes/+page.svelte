@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { logger } from '$lib/logger';
+	import QRCode from '$lib/QRCode.svelte';
 	import { signIn, confirmSignIn, setUpTOTP, signOut, type SignInOutput } from 'aws-amplify/auth';
 
 	let username: string = '';
@@ -71,7 +72,7 @@
 			<p>Setting up TOTP</p>
 		{:then setuptTOTPOutput}
 			<p>QR Code</p>
-			<QRCode value={setuptTOTPOutput.getSetupUri('test nobkz service')} />
+			<QRCode value={setuptTOTPOutput.getSetupUri('test nobkz service').toString()} />
 		{:catch error}
 			<p>Error setting up TOTP: {error.message}</p>
 		{/await}
