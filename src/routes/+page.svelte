@@ -1,11 +1,18 @@
 <script lang="ts">
 	import { logger } from '$lib/logger';
 	import QRCode from '$lib/QRCode.svelte';
-	import { signIn, confirmSignIn, setUpTOTP, signOut, type SignInOutput } from 'aws-amplify/auth';
+	import {
+		signIn,
+		confirmSignIn,
+		setUpTOTP,
+		signOut,
+		type SignInOutput,
+		type ConfirmSignInOutput
+	} from 'aws-amplify/auth';
 
 	let username: string = '';
 	let password: string = '';
-	let signInStep: SignInOutput['nextStep']['signInStep'] | undefined;
+	let nextStep: SignInOutput['nextStep'] | ConfirmSignInOutput['nextStep'] | undefined;
 
 	let newPassword: string = '';
 	let totpSetupCode: string = '';
@@ -21,32 +28,32 @@
 			}
 		});
 		logger.info(signInOutput, 'signInOutput from handleLogin');
-		signInStep = signInOutput.nextStep.signInStep;
+		nextStep = signInOutput.nextStep;
 	}
 
 	async function handleNewPassword() {
 		logger.info({ newPassword }, 'handleNewPassword');
 		const confirmSignInOutput = await confirmSignIn({ challengeResponse: newPassword });
 		logger.info(confirmSignInOutput, 'confirmSignInOutput from handleNewPassword');
-		signInStep = confirmSignInOutput.nextStep.signInStep;
+		nextStep = confirmSignInOutput.nextStep;
 	}
 
 	async function handleTOTPSetup() {
 		logger.info({ totpSetupCode }, 'handleTOTPSetup');
 		const confirmSignInOutput = await confirmSignIn({ challengeResponse: totpSetupCode });
 		logger.info(confirmSignInOutput, 'confirmSignInOutput from handleTOTPSetup');
-		signInStep = confirmSignInOutput.nextStep.signInStep;
+		nextStep = confirmSignInOutput.nextStep;
 	}
 
 	async function handleTOTP() {
 		logger.info({ totpCode }, 'handleTOTP');
 		const confirmSignInOutput = await confirmSignIn({ challengeResponse: totpCode });
 		logger.info(confirmSignInOutput, 'confirmSignInOutput from handleTOTP');
-		signInStep = confirmSignInOutput.nextStep.signInStep;
+		nextStep = confirmSignInOutput.nextStep;
 	}
 </script>
 
-{#if !signInStep}
+{#if !nextStep}
 	<form method="POST" on:submit|preventDefault={handleLogin}>
 		<label
 			>Username
@@ -58,7 +65,7 @@
 		</label>
 		<input type="submit" value="signin" />
 	</form>
-{:else if signInStep === 'CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED'}
+{:else if nextStep.signInStep === 'CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED'}
 	<form method="POST" on:submit|preventDefault={handleNewPassword}>
 		<label
 			>New Password
@@ -66,23 +73,17 @@
 		</label>
 		<input type="submit" value="new password" />
 	</form>
-{:else if signInStep === 'CONTINUE_SIGN_IN_WITH_TOTP_SETUP'}
+{:else if nextStep.signInStep === 'CONTINUE_SIGN_IN_WITH_TOTP_SETUP'}
 	<form method="POST" on:submit|preventDefault={handleTOTPSetup}>
-		{#await setUpTOTP()}
-			<p>Setting up TOTP</p>
-		{:then setuptTOTPOutput}
-			<p>QR Code</p>
-			<QRCode value={setuptTOTPOutput.getSetupUri('test nobkz service').toString()} />
-		{:catch error}
-			<p>Error setting up TOTP: {error.message}</p>
-		{/await}
+		<p>QR Code</p>
+		<QRCode value={nextStep.totpSetupDetails.getSetupUri('test nobkz service').toString()} />
 		<label
 			>2FA Code
 			<input type="text" name="code" bind:value={totpSetupCode} />
 		</label>
 		<input type="submit" value="setup totp" />
 	</form>
-{:else if signInStep === 'CONFIRM_SIGN_IN_WITH_TOTP_CODE'}
+{:else if nextStep.signInStep === 'CONFIRM_SIGN_IN_WITH_TOTP_CODE'}
 	<form method="POST" on:submit|preventDefault={handleTOTP}>
 		<label
 			>2FA Code
@@ -90,15 +91,15 @@
 		</label>
 		<input type="submit" value="totp" />
 	</form>
-{:else if signInStep === 'DONE'}
+{:else if nextStep.signInStep === 'DONE'}
 	<p>Done</p>
 	<button
 		on:click={(e) => {
 			signOut().then(() => {
-				signInStep = undefined;
+				nextStep = undefined;
 			});
 		}}>Sign out</button
 	>
 {:else}
-	<p>Unknown step: {signInStep}</p>
+	<p>Unknown step: {nextStep.signInStep}</p>
 {/if}
