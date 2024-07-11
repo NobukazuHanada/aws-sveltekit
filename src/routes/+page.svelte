@@ -7,7 +7,8 @@
 		setUpTOTP,
 		signOut,
 		type SignInOutput,
-		type ConfirmSignInOutput
+		type ConfirmSignInOutput,
+		autoSignIn
 	} from 'aws-amplify/auth';
 
 	let username: string = '';
@@ -17,6 +18,10 @@
 	let newPassword: string = '';
 	let totpSetupCode: string = '';
 	let totpCode: string = '';
+
+	(async () => {
+		nextStep = (await autoSignIn()).nextStep;
+	})();
 
 	async function handleLogin() {
 		logger.info({ username, password }, 'handleLogin');
