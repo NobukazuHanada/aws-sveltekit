@@ -8,7 +8,8 @@
 		signOut,
 		type SignInOutput,
 		type ConfirmSignInOutput,
-		autoSignIn
+		autoSignIn,
+		getCurrentUser
 	} from 'aws-amplify/auth';
 
 	let username: string = '';
@@ -20,7 +21,8 @@
 	let totpCode: string = '';
 
 	(async () => {
-		nextStep = (await autoSignIn()).nextStep;
+		const currentUserOutput = await getCurrentUser();
+		logger.info(currentUserOutput, 'currentUserOutput');
 	})();
 
 	async function handleLogin() {
