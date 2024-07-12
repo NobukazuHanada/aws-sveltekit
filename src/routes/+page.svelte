@@ -20,11 +20,6 @@
 	let totpSetupCode: string = '';
 	let totpCode: string = '';
 
-	(async () => {
-		const currentUserOutput = await getCurrentUser();
-		logger.info(currentUserOutput, 'currentUserOutput');
-	})();
-
 	async function handleLogin() {
 		logger.info({ username, password }, 'handleLogin');
 		const signInOutput = await signIn({
